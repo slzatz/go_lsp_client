@@ -15,6 +15,193 @@ func main() {
 	var workspace protocol.WorkspaceClientCapabilities
 	fmt.Printf("%v\n", c)
 
+	synchronization := &protocol.TextDocumentSyncClientCapabilities{
+		DynamicRegistration: true,
+		WillSave:            true,
+		WillSaveWaitUntil:   true,
+		DidSave:             true,
+	}
+
+	completion := &protocol.CompletionTextDocumentClientCapabilities{
+		DynamicRegistration: true,
+		CompletionItem: &protocol.CompletionTextDocumentClientCapabilitiesItem{
+			SnippetSupport:          true,
+			CommitCharactersSupport: true,
+			DocumentationFormat: []protocol.MarkupKind{
+				protocol.PlainText,
+				protocol.Markdown,
+			},
+			DeprecatedSupport: true,
+			PreselectSupport:  true,
+		},
+
+		CompletionItemKind: &protocol.CompletionTextDocumentClientCapabilitiesItemKind{
+			ValueSet: []protocol.CompletionItemKind{protocol.CompletionItemKindText},
+		},
+		ContextSupport: true,
+	}
+
+	hover := &protocol.HoverTextDocumentClientCapabilities{
+		DynamicRegistration: true,
+		ContentFormat: []protocol.MarkupKind{
+			protocol.PlainText,
+			protocol.Markdown,
+		},
+	}
+
+	textdocument := &protocol.TextDocumentClientCapabilities{
+		Synchronization: &protocol.TextDocumentSyncClientCapabilities{
+			DynamicRegistration: true,
+			WillSave:            true,
+			WillSaveWaitUntil:   true,
+			DidSave:             true,
+		},
+
+		Completion: &protocol.CompletionTextDocumentClientCapabilities{
+			DynamicRegistration: true,
+			CompletionItem: &protocol.CompletionTextDocumentClientCapabilitiesItem{
+				SnippetSupport:          true,
+				CommitCharactersSupport: true,
+				DocumentationFormat: []protocol.MarkupKind{
+					protocol.PlainText,
+					protocol.Markdown,
+				},
+				DeprecatedSupport: true,
+				PreselectSupport:  true,
+			},
+
+			CompletionItemKind: &protocol.CompletionTextDocumentClientCapabilitiesItemKind{
+				ValueSet: []protocol.CompletionItemKind{protocol.CompletionItemKindText},
+			},
+			ContextSupport: true,
+		},
+
+		Hover: &protocol.HoverTextDocumentClientCapabilities{
+			DynamicRegistration: true,
+			ContentFormat: []protocol.MarkupKind{
+				protocol.PlainText,
+				protocol.Markdown,
+			},
+		},
+
+		SignatureHelp: &protocol.SignatureHelpTextDocumentClientCapabilities{
+			DynamicRegistration: true,
+			SignatureInformation: &protocol.TextDocumentClientCapabilitiesSignatureInformation{
+				DocumentationFormat: []protocol.MarkupKind{
+					protocol.PlainText,
+					protocol.Markdown,
+				},
+			},
+		},
+		Declaration: &protocol.DeclarationTextDocumentClientCapabilities{
+			DynamicRegistration: true,
+			LinkSupport:         true,
+		},
+		Definition: &protocol.DefinitionTextDocumentClientCapabilities{
+			DynamicRegistration: true,
+			LinkSupport:         true,
+		},
+		TypeDefinition: &protocol.TypeDefinitionTextDocumentClientCapabilities{
+			DynamicRegistration: true,
+			LinkSupport:         true,
+		},
+		Implementation: &protocol.ImplementationTextDocumentClientCapabilities{
+			DynamicRegistration: true,
+			LinkSupport:         true,
+		},
+		References: &protocol.ReferencesTextDocumentClientCapabilities{
+			DynamicRegistration: true,
+		},
+		DocumentHighlight: &protocol.DocumentHighlightClientCapabilities{
+			DynamicRegistration: true,
+		},
+		DocumentSymbol: &protocol.DocumentSymbolClientCapabilities{
+			DynamicRegistration: true,
+			SymbolKind: &protocol.SymbolKindCapabilities{
+				ValueSet: []protocol.SymbolKind{
+					protocol.SymbolKindFile,
+					protocol.SymbolKindModule,
+					protocol.SymbolKindNamespace,
+					protocol.SymbolKindPackage,
+					protocol.SymbolKindClass,
+					protocol.SymbolKindMethod,
+				},
+			},
+			HierarchicalDocumentSymbolSupport: true,
+		},
+		CodeAction: &protocol.CodeActionClientCapabilities{
+			DynamicRegistration: true,
+			CodeActionLiteralSupport: &protocol.CodeActionClientCapabilitiesLiteralSupport{
+				CodeActionKind: &protocol.CodeActionClientCapabilitiesKind{
+					ValueSet: []protocol.CodeActionKind{
+						protocol.QuickFix,
+						protocol.Refactor,
+						protocol.RefactorExtract,
+						protocol.RefactorRewrite,
+						protocol.Source,
+						protocol.SourceOrganizeImports,
+					},
+				},
+			},
+		},
+		CodeLens: &protocol.CodeLensClientCapabilities{
+			DynamicRegistration: true,
+		},
+		DocumentLink: &protocol.DocumentLinkClientCapabilities{
+			DynamicRegistration: true,
+		},
+		ColorProvider: &protocol.DocumentColorClientCapabilities{
+			DynamicRegistration: true,
+		},
+		Formatting: &protocol.DocumentFormattingClientCapabilities{
+			DynamicRegistration: true,
+		},
+		RangeFormatting: &protocol.DocumentRangeFormattingClientCapabilities{
+			DynamicRegistration: true,
+		},
+		OnTypeFormatting: &protocol.DocumentOnTypeFormattingClientCapabilities{
+			DynamicRegistration: true,
+		},
+		PublishDiagnostics: &protocol.PublishDiagnosticsClientCapabilities{
+			RelatedInformation: true,
+		},
+		Rename: &protocol.RenameClientCapabilities{
+			DynamicRegistration: true,
+			PrepareSupport:      true,
+		},
+		FoldingRange: &protocol.FoldingRangeClientCapabilities{
+			DynamicRegistration: true,
+			RangeLimit:          uint32(5),
+			LineFoldingOnly:     true,
+		},
+		SelectionRange: &protocol.SelectionRangeClientCapabilities{
+			DynamicRegistration: true,
+		},
+		CallHierarchy: &protocol.CallHierarchyClientCapabilities{
+			DynamicRegistration: true,
+		},
+		SemanticTokens: &protocol.SemanticTokensClientCapabilities{
+			DynamicRegistration: true,
+			Requests: protocol.SemanticTokensWorkspaceClientCapabilitiesRequests{
+				Range: true,
+				Full:  true,
+			},
+			TokenTypes:     []string{"test", "tokenTypes"},
+			TokenModifiers: []string{"test", "tokenModifiers"},
+			Formats: []protocol.TokenFormat{
+				protocol.TokenFormatRelative,
+			},
+			OverlappingTokenSupport: true,
+			MultilineTokenSupport:   true,
+		},
+		LinkedEditingRange: &protocol.LinkedEditingRangeClientCapabilities{
+			DynamicRegistration: true,
+		},
+		Moniker: &protocol.MonikerClientCapabilities{
+			DynamicRegistration: true,
+		},
+	}
+
 	clientCapabilities = protocol.ClientCapabilities{
 		Workspace: &protocol.WorkspaceClientCapabilities{
 			ApplyEdit: true,
@@ -61,158 +248,158 @@ func main() {
 					SnippetSupport:          true,
 					CommitCharactersSupport: true,
 					DocumentationFormat: []protocol.MarkupKind{
-						PlainText,
-						Markdown,
+						protocol.PlainText,
+						protocol.Markdown,
 					},
 					DeprecatedSupport: true,
 					PreselectSupport:  true,
 				},
-				CompletionItemKind: &CompletionTextDocumentClientCapabilitiesItemKind{
-					ValueSet: []CompletionItemKind{CompletionItemKindText},
+				CompletionItemKind: &protocol.CompletionTextDocumentClientCapabilitiesItemKind{
+					ValueSet: []protocol.CompletionItemKind{protocol.CompletionItemKindText},
 				},
 				ContextSupport: true,
 			},
-			Hover: &HoverTextDocumentClientCapabilities{
+			Hover: &protocol.HoverTextDocumentClientCapabilities{
 				DynamicRegistration: true,
-				ContentFormat: []MarkupKind{
-					PlainText,
-					Markdown,
+				ContentFormat: []protocol.MarkupKind{
+					protocol.PlainText,
+					protocol.Markdown,
 				},
 			},
-			SignatureHelp: &SignatureHelpTextDocumentClientCapabilities{
+			SignatureHelp: &protocol.SignatureHelpTextDocumentClientCapabilities{
 				DynamicRegistration: true,
-				SignatureInformation: &TextDocumentClientCapabilitiesSignatureInformation{
-					DocumentationFormat: []MarkupKind{
-						PlainText,
-						Markdown,
+				SignatureInformation: &protocol.TextDocumentClientCapabilitiesSignatureInformation{
+					DocumentationFormat: []protocol.MarkupKind{
+						protocol.PlainText,
+						protocol.Markdown,
 					},
 				},
 			},
-			Declaration: &DeclarationTextDocumentClientCapabilities{
+			Declaration: &protocol.DeclarationTextDocumentClientCapabilities{
 				DynamicRegistration: true,
 				LinkSupport:         true,
 			},
-			Definition: &DefinitionTextDocumentClientCapabilities{
+			Definition: &protocol.DefinitionTextDocumentClientCapabilities{
 				DynamicRegistration: true,
 				LinkSupport:         true,
 			},
-			TypeDefinition: &TypeDefinitionTextDocumentClientCapabilities{
+			TypeDefinition: &protocol.TypeDefinitionTextDocumentClientCapabilities{
 				DynamicRegistration: true,
 				LinkSupport:         true,
 			},
-			Implementation: &ImplementationTextDocumentClientCapabilities{
+			Implementation: &protocol.ImplementationTextDocumentClientCapabilities{
 				DynamicRegistration: true,
 				LinkSupport:         true,
 			},
-			References: &ReferencesTextDocumentClientCapabilities{
+			References: &protocol.ReferencesTextDocumentClientCapabilities{
 				DynamicRegistration: true,
 			},
-			DocumentHighlight: &DocumentHighlightClientCapabilities{
+			DocumentHighlight: &protocol.DocumentHighlightClientCapabilities{
 				DynamicRegistration: true,
 			},
-			DocumentSymbol: &DocumentSymbolClientCapabilities{
+			DocumentSymbol: &protocol.DocumentSymbolClientCapabilities{
 				DynamicRegistration: true,
-				SymbolKind: &SymbolKindCapabilities{
-					ValueSet: []SymbolKind{
-						SymbolKindFile,
-						SymbolKindModule,
-						SymbolKindNamespace,
-						SymbolKindPackage,
-						SymbolKindClass,
-						SymbolKindMethod,
+				SymbolKind: &protocol.SymbolKindCapabilities{
+					ValueSet: []protocol.SymbolKind{
+						protocol.SymbolKindFile,
+						protocol.SymbolKindModule,
+						protocol.SymbolKindNamespace,
+						protocol.SymbolKindPackage,
+						protocol.SymbolKindClass,
+						protocol.SymbolKindMethod,
 					},
 				},
 				HierarchicalDocumentSymbolSupport: true,
 			},
-			CodeAction: &CodeActionClientCapabilities{
+			CodeAction: &protocol.CodeActionClientCapabilities{
 				DynamicRegistration: true,
-				CodeActionLiteralSupport: &CodeActionClientCapabilitiesLiteralSupport{
-					CodeActionKind: &CodeActionClientCapabilitiesKind{
-						ValueSet: []CodeActionKind{
-							QuickFix,
-							Refactor,
-							RefactorExtract,
-							RefactorRewrite,
-							Source,
-							SourceOrganizeImports,
+				CodeActionLiteralSupport: &protocol.CodeActionClientCapabilitiesLiteralSupport{
+					CodeActionKind: &protocol.CodeActionClientCapabilitiesKind{
+						ValueSet: []protocol.CodeActionKind{
+							protocol.QuickFix,
+							protocol.Refactor,
+							protocol.RefactorExtract,
+							protocol.RefactorRewrite,
+							protocol.Source,
+							protocol.SourceOrganizeImports,
 						},
 					},
 				},
 			},
-			CodeLens: &CodeLensClientCapabilities{
+			CodeLens: &protocol.CodeLensClientCapabilities{
 				DynamicRegistration: true,
 			},
-			DocumentLink: &DocumentLinkClientCapabilities{
+			DocumentLink: &protocol.DocumentLinkClientCapabilities{
 				DynamicRegistration: true,
 			},
-			ColorProvider: &DocumentColorClientCapabilities{
+			ColorProvider: &protocol.DocumentColorClientCapabilities{
 				DynamicRegistration: true,
 			},
-			Formatting: &DocumentFormattingClientCapabilities{
+			Formatting: &protocol.DocumentFormattingClientCapabilities{
 				DynamicRegistration: true,
 			},
-			RangeFormatting: &DocumentRangeFormattingClientCapabilities{
+			RangeFormatting: &protocol.DocumentRangeFormattingClientCapabilities{
 				DynamicRegistration: true,
 			},
-			OnTypeFormatting: &DocumentOnTypeFormattingClientCapabilities{
+			OnTypeFormatting: &protocol.DocumentOnTypeFormattingClientCapabilities{
 				DynamicRegistration: true,
 			},
-			PublishDiagnostics: &PublishDiagnosticsClientCapabilities{
+			PublishDiagnostics: &protocol.PublishDiagnosticsClientCapabilities{
 				RelatedInformation: true,
 			},
-			Rename: &RenameClientCapabilities{
+			Rename: &protocol.RenameClientCapabilities{
 				DynamicRegistration: true,
 				PrepareSupport:      true,
 			},
-			FoldingRange: &FoldingRangeClientCapabilities{
+			FoldingRange: &protocol.FoldingRangeClientCapabilities{
 				DynamicRegistration: true,
 				RangeLimit:          uint32(5),
 				LineFoldingOnly:     true,
 			},
-			SelectionRange: &SelectionRangeClientCapabilities{
+			SelectionRange: &protocol.SelectionRangeClientCapabilities{
 				DynamicRegistration: true,
 			},
-			CallHierarchy: &CallHierarchyClientCapabilities{
+			CallHierarchy: &protocol.CallHierarchyClientCapabilities{
 				DynamicRegistration: true,
 			},
-			SemanticTokens: &SemanticTokensClientCapabilities{
+			SemanticTokens: &protocol.SemanticTokensClientCapabilities{
 				DynamicRegistration: true,
-				Requests: SemanticTokensWorkspaceClientCapabilitiesRequests{
+				Requests: protocol.SemanticTokensWorkspaceClientCapabilitiesRequests{
 					Range: true,
 					Full:  true,
 				},
 				TokenTypes:     []string{"test", "tokenTypes"},
 				TokenModifiers: []string{"test", "tokenModifiers"},
-				Formats: []TokenFormat{
-					TokenFormatRelative,
+				Formats: []protocol.TokenFormat{
+					protocol.TokenFormatRelative,
 				},
 				OverlappingTokenSupport: true,
 				MultilineTokenSupport:   true,
 			},
-			LinkedEditingRange: &LinkedEditingRangeClientCapabilities{
+			LinkedEditingRange: &protocol.LinkedEditingRangeClientCapabilities{
 				DynamicRegistration: true,
 			},
-			Moniker: &MonikerClientCapabilities{
+			Moniker: &protocol.MonikerClientCapabilities{
 				DynamicRegistration: true,
 			},
 		},
-		Window: &WindowClientCapabilities{
+		Window: &protocol.WindowClientCapabilities{
 			WorkDoneProgress: true,
-			ShowMessage: &ShowMessageRequestClientCapabilities{
-				MessageActionItem: &ShowMessageRequestClientCapabilitiesMessageActionItem{
+			ShowMessage: &protocol.ShowMessageRequestClientCapabilities{
+				MessageActionItem: &protocol.ShowMessageRequestClientCapabilitiesMessageActionItem{
 					AdditionalPropertiesSupport: true,
 				},
 			},
-			ShowDocument: &ShowDocumentClientCapabilities{
+			ShowDocument: &protocol.ShowDocumentClientCapabilities{
 				Support: true,
 			},
 		},
-		General: &GeneralClientCapabilities{
-			RegularExpressions: &RegularExpressionsClientCapabilities{
+		General: &protocol.GeneralClientCapabilities{
+			RegularExpressions: &protocol.RegularExpressionsClientCapabilities{
 				Engine:  "ECMAScript",
 				Version: "ES2020",
 			},
-			Markdown: &MarkdownClientCapabilities{
+			Markdown: &protocol.MarkdownClientCapabilities{
 				Parser:  "marked",
 				Version: "1.1.0",
 			},
