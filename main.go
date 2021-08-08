@@ -1,19 +1,99 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"io"
+	"log"
+	"os/exec"
+	"time"
 
 	//"github.com/go-language-server/protocol"
+
 	"go.lsp.dev/protocol"
+	//"go.lsp.dev/jsonrpc2"
 )
 
 func main() {
-	var c protocol.Client
+	//var c protocol.Client
+	//var cmd *exec.Cmd
+	var rows []string
+	cmd := exec.Command("gopls", "serve", "-rpc.trace", "-logfile", "/home/slzatz/gopls_log")
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		log.Fatal(err)
+	}
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("#1")
+	err = cmd.Start()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("#2")
 
-	var clientCapabilities protocol.ClientCapabilities
-	var textDocument *protocol.TextDocumentClientCapabilities
-	var workspace protocol.WorkspaceClientCapabilities
-	fmt.Printf("%v\n", c)
+	s := `{"jsonrpc": "2.0", "id": 0, "method": "initialize", "params": {"processId": 0, "rootPath": null, "rootUri": "file:///", "initializationOptions": null, "capabilities": {"offsetEncoding": ["utf-8"], "textDocument": {"codeAction": {"dynamicRegistration": true}, "codeLens": {"dynamicRegistration": true}, "colorProvider": {"dynamicRegistration": true}, "completion": {"completionItem": {"commitCharactersSupport": true, "documentationFormat": ["markdown", "plaintext"], "snippetSupport": true}, "completionItemKind": {"valueSet": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25]}, "contextSupport": true, "dynamicRegistration": true}, "definition": {"dynamicRegistration": true}, "documentHighlight": {"dynamicRegistration": true}, "documentLink": {"dynamicRegistration": true}, "documentSymbol": {"dynamicRegistration": true, "symbolKind": {"valueSet": [1, 2, 3, 4, 5, 6, 7, 8, 9,10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26]}}, "formatting": {"dynamicRegistration": true}, "hover": {"contentFormat": ["markdown", "plaintext"], "dynamicRegistration": true}, "implementation": {"dynamicRegistration": true}, "onTypeFormatting": {"dynamicRegistration": true}, "publishDiagnostics": {"relatedInformation": true}, "rangeFormatting": {"dynamicRegistration": true}, "references": {"dynamicRegistration": true}, "rename": {"dynamicRegistration": true}, "signatureHelp": {"dynamicRegistration": true, "signatureInformation": {"documentationFormat": ["markdown", "plaintext"]}}, "synchronization": {"didSave": true, "dynamicRegistration": true, "willSave": true, "willSaveWaitUntil": true}, "typeDefinition": {"dynamicRegistration": true}}, "workspace": {"applyEdit": true, "configuration": true, "didChangeConfiguration": {"dynamicRegistration": true}, "didChangeWatchedFiles": {"dynamicRegistration": true}, "executeCommand": {"dynamicRegistration": true}, "symbol": {"dynamicRegistration": true, "symbolKind": {"valueSet": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26]}}, "workspaceEdit": {"documentChanges": true}, "workspaceFolders": true}}, "trace": "off", "workspaceFolders": [{"name": "listmanager", "uri": "file:///"}]}}`
+
+	header := fmt.Sprintf("Content-Length: %d\r\n\r\n", len(s))
+	s = header + s
+	io.WriteString(stdin, s)
+	fmt.Println("#3")
+
+	time.Sleep(2 * time.Second)
+
+	//buffer_out0 := bufio.NewReader(stdout)
+	buffer_out0 := bufio.NewReaderSize(stdout, 10000)
+	p := make([]byte, 10000)
+	fmt.Printf("buffer_out0 = %v\n", buffer_out0.Size())
+	n, err := buffer_out0.Read(p)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("n = %d", n)
+	fmt.Printf("Read = %s", string(p))
+
+	/*
+		for {
+
+			bytes, _, err := buffer_out0.ReadLine()
+			fmt.Printf("Length = %d\n", len(bytes))
+			rows = append(rows, string(bytes))
+			if err == io.EOF {
+				break
+			}
+			if len(bytes) == 0 {
+				break
+			}
+		}
+		fmt.Printf("rows = %q\n\n", rows)
+		//buffer_out1 := bufio.NewReader(stdout)
+		for {
+			fmt.Println("#4")
+
+			bytes, _, err := buffer_out0.ReadLine()
+			fmt.Println("#5")
+			rows = append(rows, string(bytes))
+			fmt.Printf("rows = %q\n\n", rows)
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				fmt.Printf("Error: %v", err)
+				break
+			}
+			if len(bytes) > 100 {
+				break
+			}
+		}
+		fmt.Printf("rows = %q\n\n", rows)
+	*/
+	//fmt.Printf("%q", s)
+	//var clientCapabilities protocol.ClientCapabilities
+	//var textDocument *protocol.TextDocumentClientCapabilities
+	//var workspace protocol.WorkspaceClientCapabilities
+	//fmt.Printf("%v\n", c)
 
 	synchronization := &protocol.TextDocumentSyncClientCapabilities{
 		DynamicRegistration: true,
@@ -21,6 +101,8 @@ func main() {
 		WillSaveWaitUntil:   true,
 		DidSave:             true,
 	}
+
+	fmt.Printf("%v\n", synchronization)
 
 	completion := &protocol.CompletionTextDocumentClientCapabilities{
 		DynamicRegistration: true,
@@ -41,13 +123,16 @@ func main() {
 		ContextSupport: true,
 	}
 
+	fmt.Printf("%v\n", completion)
 	hover := &protocol.HoverTextDocumentClientCapabilities{
+
 		DynamicRegistration: true,
 		ContentFormat: []protocol.MarkupKind{
 			protocol.PlainText,
 			protocol.Markdown,
 		},
 	}
+	fmt.Printf("%v\n", hover)
 
 	textdocument := &protocol.TextDocumentClientCapabilities{
 		Synchronization: &protocol.TextDocumentSyncClientCapabilities{
@@ -201,8 +286,9 @@ func main() {
 			DynamicRegistration: true,
 		},
 	}
+	fmt.Printf("%v\n", textdocument)
 
-	clientCapabilities = protocol.ClientCapabilities{
+	clientcapabilities := protocol.ClientCapabilities{
 		Workspace: &protocol.WorkspaceClientCapabilities{
 			ApplyEdit: true,
 			WorkspaceEdit: &protocol.WorkspaceClientCapabilitiesWorkspaceEdit{
@@ -406,4 +492,5 @@ func main() {
 		},
 		Experimental: "testExperimental",
 	}
+	fmt.Printf("%v\n", clientcapabilities)
 }
