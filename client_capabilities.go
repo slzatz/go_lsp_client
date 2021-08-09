@@ -33,7 +33,7 @@ var clientcapabilities = protocol.ClientCapabilities{
 			DynamicRegistration: true,
 		},
 		WorkspaceFolders: true,
-		Configuration:    true,
+		Configuration:    false,
 	},
 	TextDocument: &protocol.TextDocumentClientCapabilities{
 		Synchronization: &protocol.TextDocumentSyncClientCapabilities{
@@ -184,7 +184,7 @@ var clientcapabilities = protocol.ClientCapabilities{
 		},
 	},
 	Window: &protocol.WindowClientCapabilities{
-		WorkDoneProgress: true,
+		WorkDoneProgress: false,
 		ShowMessage: &protocol.ShowMessageRequestClientCapabilities{
 			MessageActionItem: &protocol.ShowMessageRequestClientCapabilitiesMessageActionItem{
 				AdditionalPropertiesSupport: true,
