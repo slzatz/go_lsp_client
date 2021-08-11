@@ -11,13 +11,13 @@ var clientcapabilities = protocol.ClientCapabilities{
 			ResourceOperations: []string{"ResourceOperations"},
 		},
 		DidChangeConfiguration: &protocol.DidChangeConfigurationWorkspaceClientCapabilities{
-			DynamicRegistration: true,
+			DynamicRegistration: false,
 		},
 		DidChangeWatchedFiles: &protocol.DidChangeWatchedFilesWorkspaceClientCapabilities{
-			DynamicRegistration: true,
+			DynamicRegistration: false,
 		},
 		Symbol: &protocol.WorkspaceSymbolClientCapabilities{
-			DynamicRegistration: true,
+			DynamicRegistration: false,
 			SymbolKind: &protocol.SymbolKindCapabilities{
 				ValueSet: []protocol.SymbolKind{
 					protocol.SymbolKindFile,
@@ -30,20 +30,20 @@ var clientcapabilities = protocol.ClientCapabilities{
 			},
 		},
 		ExecuteCommand: &protocol.ExecuteCommandClientCapabilities{
-			DynamicRegistration: true,
+			DynamicRegistration: false,
 		},
 		WorkspaceFolders: true,
 		Configuration:    false,
 	},
 	TextDocument: &protocol.TextDocumentClientCapabilities{
 		Synchronization: &protocol.TextDocumentSyncClientCapabilities{
-			DynamicRegistration: true,
+			DynamicRegistration: false,
 			WillSave:            true,
 			WillSaveWaitUntil:   true,
 			DidSave:             true,
 		},
 		Completion: &protocol.CompletionTextDocumentClientCapabilities{
-			DynamicRegistration: true,
+			DynamicRegistration: false,
 			CompletionItem: &protocol.CompletionTextDocumentClientCapabilitiesItem{
 				SnippetSupport:          true,
 				CommitCharactersSupport: true,
@@ -60,14 +60,14 @@ var clientcapabilities = protocol.ClientCapabilities{
 			ContextSupport: true,
 		},
 		Hover: &protocol.HoverTextDocumentClientCapabilities{
-			DynamicRegistration: true,
+			DynamicRegistration: false,
 			ContentFormat: []protocol.MarkupKind{
 				protocol.PlainText,
 				protocol.Markdown,
 			},
 		},
 		SignatureHelp: &protocol.SignatureHelpTextDocumentClientCapabilities{
-			DynamicRegistration: true,
+			DynamicRegistration: false,
 			SignatureInformation: &protocol.TextDocumentClientCapabilitiesSignatureInformation{
 				DocumentationFormat: []protocol.MarkupKind{
 					protocol.PlainText,
@@ -76,29 +76,29 @@ var clientcapabilities = protocol.ClientCapabilities{
 			},
 		},
 		Declaration: &protocol.DeclarationTextDocumentClientCapabilities{
-			DynamicRegistration: true,
+			DynamicRegistration: false,
 			LinkSupport:         true,
 		},
 		Definition: &protocol.DefinitionTextDocumentClientCapabilities{
-			DynamicRegistration: true,
+			DynamicRegistration: false,
 			LinkSupport:         true,
 		},
 		TypeDefinition: &protocol.TypeDefinitionTextDocumentClientCapabilities{
-			DynamicRegistration: true,
+			DynamicRegistration: false,
 			LinkSupport:         true,
 		},
 		Implementation: &protocol.ImplementationTextDocumentClientCapabilities{
-			DynamicRegistration: true,
+			DynamicRegistration: false,
 			LinkSupport:         true,
 		},
 		References: &protocol.ReferencesTextDocumentClientCapabilities{
-			DynamicRegistration: true,
+			DynamicRegistration: false,
 		},
 		DocumentHighlight: &protocol.DocumentHighlightClientCapabilities{
-			DynamicRegistration: true,
+			DynamicRegistration: false,
 		},
 		DocumentSymbol: &protocol.DocumentSymbolClientCapabilities{
-			DynamicRegistration: true,
+			DynamicRegistration: false,
 			SymbolKind: &protocol.SymbolKindCapabilities{
 				ValueSet: []protocol.SymbolKind{
 					protocol.SymbolKindFile,
@@ -112,7 +112,7 @@ var clientcapabilities = protocol.ClientCapabilities{
 			HierarchicalDocumentSymbolSupport: true,
 		},
 		CodeAction: &protocol.CodeActionClientCapabilities{
-			DynamicRegistration: true,
+			DynamicRegistration: false,
 			CodeActionLiteralSupport: &protocol.CodeActionClientCapabilitiesLiteralSupport{
 				CodeActionKind: &protocol.CodeActionClientCapabilitiesKind{
 					ValueSet: []protocol.CodeActionKind{
@@ -127,43 +127,43 @@ var clientcapabilities = protocol.ClientCapabilities{
 			},
 		},
 		CodeLens: &protocol.CodeLensClientCapabilities{
-			DynamicRegistration: true,
+			DynamicRegistration: false,
 		},
 		DocumentLink: &protocol.DocumentLinkClientCapabilities{
-			DynamicRegistration: true,
+			DynamicRegistration: false,
 		},
 		ColorProvider: &protocol.DocumentColorClientCapabilities{
-			DynamicRegistration: true,
+			DynamicRegistration: false,
 		},
 		Formatting: &protocol.DocumentFormattingClientCapabilities{
-			DynamicRegistration: true,
+			DynamicRegistration: false,
 		},
 		RangeFormatting: &protocol.DocumentRangeFormattingClientCapabilities{
-			DynamicRegistration: true,
+			DynamicRegistration: false,
 		},
 		OnTypeFormatting: &protocol.DocumentOnTypeFormattingClientCapabilities{
-			DynamicRegistration: true,
+			DynamicRegistration: false,
 		},
 		PublishDiagnostics: &protocol.PublishDiagnosticsClientCapabilities{
 			RelatedInformation: true,
 		},
 		Rename: &protocol.RenameClientCapabilities{
-			DynamicRegistration: true,
+			DynamicRegistration: false,
 			PrepareSupport:      true,
 		},
 		FoldingRange: &protocol.FoldingRangeClientCapabilities{
-			DynamicRegistration: true,
+			DynamicRegistration: false,
 			RangeLimit:          uint32(5),
 			LineFoldingOnly:     true,
 		},
 		SelectionRange: &protocol.SelectionRangeClientCapabilities{
-			DynamicRegistration: true,
+			DynamicRegistration: false,
 		},
 		CallHierarchy: &protocol.CallHierarchyClientCapabilities{
-			DynamicRegistration: true,
+			DynamicRegistration: false,
 		},
 		SemanticTokens: &protocol.SemanticTokensClientCapabilities{
-			DynamicRegistration: true,
+			DynamicRegistration: false,
 			Requests: protocol.SemanticTokensWorkspaceClientCapabilitiesRequests{
 				Range: true,
 				Full:  true,
@@ -177,10 +177,10 @@ var clientcapabilities = protocol.ClientCapabilities{
 			MultilineTokenSupport:   true,
 		},
 		LinkedEditingRange: &protocol.LinkedEditingRangeClientCapabilities{
-			DynamicRegistration: true,
+			DynamicRegistration: false,
 		},
 		Moniker: &protocol.MonikerClientCapabilities{
-			DynamicRegistration: true,
+			DynamicRegistration: false,
 		},
 	},
 	Window: &protocol.WindowClientCapabilities{
