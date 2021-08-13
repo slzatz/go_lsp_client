@@ -192,7 +192,7 @@ func main() {
 	fmt.Printf("\n\nEntering for loop\n\n")
 	diagnostics := make(chan []protocol.Diagnostic)
 	go receiveDiagnostics(diagnostics)
-	go readMessages(buffer_out0, diagnostics)
+	go readMessages2(buffer_out0, diagnostics)
 
 	// below create some files to test diagnostics
 	var j int32
@@ -253,7 +253,7 @@ func main() {
 	fmt.Printf("\n\n%s\n\n", s)
 	io.WriteString(stdin, s)
 
-	time.Sleep(10 * time.Second)
+	time.Sleep(3 * time.Second)
 }
 
 func sendDidChangeNotification(stdinp *io.WriteCloser, text string, j int32) {
@@ -359,6 +359,105 @@ func readMessages(reader *bufio.Reader, diagnostics chan []protocol.Diagnostic) 
 			}
 			var vv JsonPubDiag
 			err = json.Unmarshal(bb, &vv)
+
+			fmt.Printf("\n\n+++++++++++++++++++++++++++++++++++++++++++++++\n\n")
+			fmt.Printf("params = %+v\n", vv.Params)
+			fmt.Printf("uri = %+v\n", vv.Params.URI) //file:///home/slzatz/go_fragments/main.go
+			fmt.Printf("\n\n+++++++++++++++++++++++++++++++++++++++++++++++\n\n")
+			diagnostics <- vv.Params.Diagnostics
+		}
+
+		//time.Sleep(time.Second)
+	}
+}
+
+func readMessages2(reader *bufio.Reader, diagnostics chan []protocol.Diagnostic) {
+	// note if more than one jsonrpc message is read at one time; only dealing with first
+	bb := make([]byte, 10000)
+	z := make([]byte, 10000)
+	//reader := bufio.NewReaderSize(*stdoutp, 10000)
+	for {
+		//z = z[:0]
+		n, err := reader.Read(z)
+		if err == io.EOF {
+			fmt.Printf("\n\nGot EOF presumably from shutdown\n\n")
+			break
+		}
+		if err != nil {
+			log.Fatalf("\nRead -> %s\n%v", string(z), err)
+		}
+
+		fmt.Printf("\n\n-------------------------------\n\n")
+		fmt.Printf("ReadMessages: Number of bytes read = %d\n", n)
+		fmt.Printf("ReadMessages: Full Read = %s", string(z[:n]))
+
+		var v JsonNotification
+		var length int
+		var idx int
+		var idx0 int
+		if string(z[:7]) == "Content" {
+			idx0 = bytes.Index(z, []byte(":")) + 2
+			idx = bytes.Index(z, []byte("\r\n\r\n"))
+			length, _ = strconv.Atoi(string(z[idx0:idx]))
+			if (idx + 4 + length) == n {
+				err = json.Unmarshal(z[idx+4:n], &v)
+				if err != nil {
+					log.Fatalf("\nA -> %s\n%v", string(z), err)
+				}
+				bb = bb[0:]
+			} else if (idx + 4 + length) > n {
+				//bb = z[:n]
+				copy(bb, z[:n])
+				bb = bb[:n]
+				fmt.Printf("\n### len(b) = %d", len(bb))
+				fmt.Printf("\n###CONTINUATION!!! bb = %s\n", string(bb))
+				continue
+			} else if (idx + 4 + length) < n {
+				//bb = z[idx+4+length : n]
+				copy(bb, z[idx+4+length:n])
+				fmt.Printf("\n### len(b) = %d", len(bb))
+				fmt.Printf("\n###CONTINUATION!!! bb = %s\n", string(bb))
+				err = json.Unmarshal(z[idx+4:idx+4+length], &v)
+				if err != nil {
+					log.Fatalf("\nB -> %s\n%v", string(z), err)
+				}
+			}
+		} else {
+			z = append(bb, z...)
+			fmt.Printf("\n!!!CONTINUATION!!! bb = %s\n", string(bb))
+			fmt.Printf("!!!CONTINUATION!!! z = %s\n", string(z[:n+len(bb)]))
+			idx0 = bytes.Index(z, []byte(":")) + 2
+			idx = bytes.Index(z, []byte("\r\n\r\n"))
+			length, _ = strconv.Atoi(string(z[idx0:idx]))
+			if (idx + 4 + length) == (n + len(bb)) {
+				err = json.Unmarshal(z[idx+4:n+len(bb)], &v)
+				if err != nil {
+					log.Fatalf("\nC -> %s\n%v", string(z), err)
+				}
+				bb = bb[0:]
+			} else if (idx + 4 + length) > (n + len(bb)) {
+				copy(bb, z[:n+len(bb)])
+				bb = bb[:n+len(bb)]
+				continue
+			} else if (idx + 4 + length) < (n + len(bb)) {
+				fmt.Printf("idx + 4 + length = %d; n + len(bb) = %d", idx+4+length, len(bb))
+				err = json.Unmarshal(z[idx+4:idx+4+length], &v)
+				if err != nil {
+					log.Fatalf("\nD -> %s\n%v", string(z), err)
+				}
+				copy(bb, z[idx+4+length:n+len(bb)])
+				bb = bb[:n+len(bb)-(idx+4+length)]
+			}
+		}
+
+		if v.Method == "textDocument/publishDiagnostics" {
+			type JsonPubDiag struct {
+				Jsonrpc string                            `json:"jsonrpc"`
+				Method  string                            `json:"method"`
+				Params  protocol.PublishDiagnosticsParams `json:"params"`
+			}
+			var vv JsonPubDiag
+			err = json.Unmarshal(z[idx+4:idx+4+length], &vv)
 
 			fmt.Printf("\n\n+++++++++++++++++++++++++++++++++++++++++++++++\n\n")
 			fmt.Printf("params = %+v\n", vv.Params)
