@@ -191,21 +191,57 @@ func main() {
 	//z := make([]byte, 10000)
 	fmt.Printf("\n\nEntering for loop\n\n")
 	diagnostics := make(chan []protocol.Diagnostic)
-	go receiveDiagnostics(diagnostics)
-	go readMessages2(buffer_out0, diagnostics)
+	drawCommands := make(chan string)
+	go receiveDiagnostics(diagnostics, drawCommands)
+	go readMessages(buffer_out0, diagnostics)
 
 	// below create some files to test diagnostics
 	var j int32
 	for i := 0; i < 2; i++ {
+		select {
+		case xyz := <-drawCommands:
+			fmt.Println(xyz)
+		default:
+			fmt.Println("There wasn't anything on the channel")
+		}
 		time.Sleep(time.Second * 2)
 		text := "package main\nimport \"fmt\"\n func main() {\n fmt.Println(\"hello\"\n}\n"
 		j++
 		sendDidChangeNotification(&stdin, text, j)
+		//start := time.Now()
+
+		//time.Sleep(time.Second)
+		select {
+		case xyz := <-drawCommands:
+			fmt.Println(xyz)
+		default:
+			fmt.Println("There wasn't anything on the channel")
+		}
+		/*
+			xyz := <-drawCommands
+			elapsed := time.Since(start)
+			fmt.Printf("elapsed = %s", elapsed)
+			fmt.Println(xyz)
+		*/
+
+		//receive diagnostics here if any available
 
 		time.Sleep(time.Second * 2)
 		text = "package main\nimport \"fmt\"\n func main() {\n fmt.Println(\"hello\")\n}\n"
 		j++
 		sendDidChangeNotification(&stdin, text, j)
+		select {
+		case xyz := <-drawCommands:
+			fmt.Println(xyz)
+		default:
+			fmt.Println("There wasn't anything on the channel")
+		}
+
+		/*
+			time.Sleep(time.Second)
+			xyz = <-drawCommands
+			fmt.Println(xyz)
+		*/
 	}
 
 	// tell server the file is closed
@@ -277,101 +313,50 @@ func sendDidChangeNotification(stdinp *io.WriteCloser, text string, j int32) {
 
 }
 
-func receiveDiagnostics(diagnostics chan []protocol.Diagnostic) { //? []protocol.Diagnostics
+func receiveDiagnostics(diagnostics chan []protocol.Diagnostic, dc chan string) { //? []protocol.Diagnostics
 	for {
 		dd := <-diagnostics
-		fmt.Printf("\n\n-----------------------------------------------\n\n")
-		fmt.Printf("Diagnostics = %+v\n", dd)
+
+		var ab strings.Builder
+		ab.WriteString("\n\n-----------------------------------------------\n\n")
+		fmt.Fprintf(&ab, "->Diagnostics = %+v\n", dd)
 		for i, d := range dd {
-			fmt.Printf("Diagnostics = %+v\n", dd)
-			fmt.Printf("Diagnostics[%d] = %+v\n", i, d)
-			fmt.Printf("Diagnostics[%d].Range = %+v\n", i, d.Range)                                //{Start:{Line:1 Character:0} End:{Line:1 Character:0}}
-			fmt.Printf("Diagnostics[%d].Range.Start = %+v\n", i, d.Range.Start)                    //{Line:1 Character:0}
-			fmt.Printf("Diagnostics[%d].Range.Start.Line = %v\n", i, d.Range.Start.Line)           //uint32
-			fmt.Printf("Diagnostics[%d].Range.Start.Character = %v\n", i, d.Range.Start.Character) //uint32
-			fmt.Printf("Diagnostics[%d].Message = %s\n", i, d.Message)                             //1
+			fmt.Fprintf(&ab, "->Diagnostics = %+v\n", dd)
+			fmt.Fprintf(&ab, "->Diagnostics[%d] = %+v\n", i, d)
+			fmt.Fprintf(&ab, "->Diagnostics[%d].Range = %+v\n", i, d.Range)                                //{Start:{Line:1 Character:0} End:{Line:1 Character:0}}
+			fmt.Fprintf(&ab, "->Diagnostics[%d].Range.Start = %+v\n", i, d.Range.Start)                    //{Line:1 Character:0}
+			fmt.Fprintf(&ab, "->Diagnostics[%d].Range.Start.Line = %v\n", i, d.Range.Start.Line)           //uint32
+			fmt.Fprintf(&ab, "->Diagnostics[%d].Range.Start.Character = %v\n", i, d.Range.Start.Character) //uint32
+			fmt.Fprintf(&ab, "->Diagnostics[%d].Message = %s\n", i, d.Message)                             //1
 		}
 		if len(dd) == 0 {
-			fmt.Println("Diagnostics was []")
+			fmt.Fprintf(&ab, "->Diagnostics was []\n")
 		}
-		fmt.Printf("\n\n-----------------------------------------------\n\n")
+		ab.WriteString("\n\n-----------------------------------------------\n\n")
+
+		dc <- ab.String()
+
+		/*
+			fmt.Printf("\n\n-----------------------------------------------\n\n")
+			fmt.Printf("Diagnostics = %+v\n", dd)
+			for i, d := range dd {
+				fmt.Printf("Diagnostics = %+v\n", dd)
+				fmt.Printf("Diagnostics[%d] = %+v\n", i, d)
+				fmt.Printf("Diagnostics[%d].Range = %+v\n", i, d.Range)                                //{Start:{Line:1 Character:0} End:{Line:1 Character:0}}
+				fmt.Printf("Diagnostics[%d].Range.Start = %+v\n", i, d.Range.Start)                    //{Line:1 Character:0}
+				fmt.Printf("Diagnostics[%d].Range.Start.Line = %v\n", i, d.Range.Start.Line)           //uint32
+				fmt.Printf("Diagnostics[%d].Range.Start.Character = %v\n", i, d.Range.Start.Character) //uint32
+				fmt.Printf("Diagnostics[%d].Message = %s\n", i, d.Message)                             //1
+			}
+			if len(dd) == 0 {
+				fmt.Println("Diagnostics was []")
+			}
+			fmt.Printf("\n\n-----------------------------------------------\n\n")
+		*/
 	}
 }
 
 func readMessages(reader *bufio.Reader, diagnostics chan []protocol.Diagnostic) {
-	// note if more than one jsonrpc message is read at one time; only dealing with first
-	var bb []byte
-	z := make([]byte, 10000)
-	//reader := bufio.NewReaderSize(*stdoutp, 10000)
-	for {
-		n, err := reader.Read(z)
-		if err == io.EOF {
-			fmt.Printf("\n\nGot EOF presumably from shutdown\n\n")
-			break
-		}
-		if err != nil {
-			log.Fatalf("\nRead -> %s\n%v", string(z), err)
-		}
-		//fullRead := string(z)
-		bb = z[:n]
-		fmt.Printf("\n\n-------------------------------\n\n")
-		fmt.Printf("ReadMessages: Number of bytes read = %d\n", n)
-		//fmt.Printf("ReadMessages: Full Read = %s", fullRead)
-		fmt.Printf("ReadMessages: Full Read = %s", string(bb))
-		idx0 := bytes.Index(z, []byte(":")) + 2
-		idx := bytes.Index(z, []byte("\r\n\r\n"))
-		length, _ := strconv.Atoi(string(z[idx0:idx]))
-
-		// not sure it's common but saw an instance where only got header info
-		if n < 30 {
-			//bb = z[:n]
-			fmt.Printf("\n!!!Partial - Only got %q\n\n", string(bb))
-			n, err = reader.Read(z)
-			if err == io.EOF {
-				fmt.Printf("\n\nGot EOF presumably from shutdown\n\n")
-				break
-			}
-			if err != nil {
-				log.Fatalf("\nRead -> %s\n%v", string(z), err)
-			}
-			bb = append(bb, z...)
-		}
-
-		//bb = z[idx+4 : idx+4+length]
-		bb = bb[idx+4 : idx+4+length]
-		var v JsonNotification
-		err = json.Unmarshal(bb, &v)
-		if err != nil {
-			log.Fatalf("\nA -> %s\n%v", string(bb), err)
-		}
-
-		/*
-			fmt.Printf("\n\n-------------------------------\n\n")
-			fmt.Printf("params = %+v", v.Params)
-			fmt.Printf("\n\n-------------------------------\n\n")
-		*/
-
-		if v.Method == "textDocument/publishDiagnostics" {
-			type JsonPubDiag struct {
-				Jsonrpc string                            `json:"jsonrpc"`
-				Method  string                            `json:"method"`
-				Params  protocol.PublishDiagnosticsParams `json:"params"`
-			}
-			var vv JsonPubDiag
-			err = json.Unmarshal(bb, &vv)
-
-			fmt.Printf("\n\n+++++++++++++++++++++++++++++++++++++++++++++++\n\n")
-			fmt.Printf("params = %+v\n", vv.Params)
-			fmt.Printf("uri = %+v\n", vv.Params.URI) //file:///home/slzatz/go_fragments/main.go
-			fmt.Printf("\n\n+++++++++++++++++++++++++++++++++++++++++++++++\n\n")
-			diagnostics <- vv.Params.Diagnostics
-		}
-
-		//time.Sleep(time.Second)
-	}
-}
-
-func readMessages2(reader *bufio.Reader, diagnostics chan []protocol.Diagnostic) {
 	// note if more than one jsonrpc message is read at one time; only dealing with first
 	bb := make([]byte, 10000)
 	z := make([]byte, 10000)
