@@ -195,6 +195,28 @@ func main() {
 	go receiveDiagnostics(diagnostics, drawCommands)
 	go readMessages(buffer_out0, diagnostics)
 
+	select {
+	case xyz := <-drawCommands:
+		fmt.Println(xyz)
+	default:
+		fmt.Println("There wasn't anything on the channel")
+	}
+	time.Sleep(time.Second * 2)
+	select {
+	case xyz := <-drawCommands:
+		fmt.Println(xyz)
+	default:
+		fmt.Println("There wasn't anything on the channel")
+	}
+	time.Sleep(time.Second * 2)
+	select {
+	case xyz := <-drawCommands:
+		fmt.Println(xyz)
+	default:
+		fmt.Println("There wasn't anything on the channel")
+	}
+	time.Sleep(time.Second * 2)
+
 	// below create some files to test diagnostics
 	var j int32
 	for i := 0; i < 2; i++ {
@@ -202,46 +224,45 @@ func main() {
 		case xyz := <-drawCommands:
 			fmt.Println(xyz)
 		default:
-			fmt.Println("There wasn't anything on the channel")
+			fmt.Println("A -> There wasn't anything on the channel")
 		}
 		time.Sleep(time.Second * 2)
 		text := "package main\nimport \"fmt\"\n func main() {\n fmt.Println(\"hello\"\n}\n"
 		j++
+		fmt.Printf("Sent INCORRECT:\n%s", text)
 		sendDidChangeNotification(&stdin, text, j)
 		//start := time.Now()
 
-		//time.Sleep(time.Second)
+		time.Sleep(time.Millisecond * 400)
 		select {
 		case xyz := <-drawCommands:
 			fmt.Println(xyz)
 		default:
-			fmt.Println("There wasn't anything on the channel")
+			fmt.Println("B -> There wasn't anything on the channel")
 		}
-		/*
-			xyz := <-drawCommands
-			elapsed := time.Since(start)
-			fmt.Printf("elapsed = %s", elapsed)
-			fmt.Println(xyz)
-		*/
-
-		//receive diagnostics here if any available
 
 		time.Sleep(time.Second * 2)
 		text = "package main\nimport \"fmt\"\n func main() {\n fmt.Println(\"hello\")\n}\n"
 		j++
+		fmt.Printf("Sent CORRECT:\n%s", text)
 		sendDidChangeNotification(&stdin, text, j)
+		time.Sleep(time.Millisecond * 400)
 		select {
 		case xyz := <-drawCommands:
 			fmt.Println(xyz)
 		default:
-			fmt.Println("There wasn't anything on the channel")
+			fmt.Println("C -> There wasn't anything on the channel")
 		}
 
-		/*
-			time.Sleep(time.Second)
-			xyz = <-drawCommands
-			fmt.Println(xyz)
-		*/
+	}
+
+	time.Sleep(time.Second * 2)
+
+	select {
+	case xyz := <-drawCommands:
+		fmt.Println(xyz)
+	default:
+		fmt.Println("D -> There wasn't anything on the channel")
 	}
 
 	// tell server the file is closed
@@ -308,7 +329,6 @@ func sendDidChangeNotification(stdinp *io.WriteCloser, text string, j int32) {
 	s := string(b)
 	header := fmt.Sprintf("Content-Length: %d\r\n\r\n", len(s))
 	s = header + s
-	fmt.Printf("\n\nSent incorrect: %s\n\n", s)
 	io.WriteString(*stdinp, s)
 
 }
@@ -318,7 +338,7 @@ func receiveDiagnostics(diagnostics chan []protocol.Diagnostic, dc chan string) 
 		dd := <-diagnostics
 
 		var ab strings.Builder
-		ab.WriteString("\n\n-----------------------------------------------\n\n")
+		ab.WriteString("\n-----------------------------------------------\n")
 		fmt.Fprintf(&ab, "->Diagnostics = %+v\n", dd)
 		for i, d := range dd {
 			fmt.Fprintf(&ab, "->Diagnostics = %+v\n", dd)
@@ -332,107 +352,66 @@ func receiveDiagnostics(diagnostics chan []protocol.Diagnostic, dc chan string) 
 		if len(dd) == 0 {
 			fmt.Fprintf(&ab, "->Diagnostics was []\n")
 		}
-		ab.WriteString("\n\n-----------------------------------------------\n\n")
+		ab.WriteString("\n-----------------------------------------------\n")
 
 		dc <- ab.String()
 
-		/*
-			fmt.Printf("\n\n-----------------------------------------------\n\n")
-			fmt.Printf("Diagnostics = %+v\n", dd)
-			for i, d := range dd {
-				fmt.Printf("Diagnostics = %+v\n", dd)
-				fmt.Printf("Diagnostics[%d] = %+v\n", i, d)
-				fmt.Printf("Diagnostics[%d].Range = %+v\n", i, d.Range)                                //{Start:{Line:1 Character:0} End:{Line:1 Character:0}}
-				fmt.Printf("Diagnostics[%d].Range.Start = %+v\n", i, d.Range.Start)                    //{Line:1 Character:0}
-				fmt.Printf("Diagnostics[%d].Range.Start.Line = %v\n", i, d.Range.Start.Line)           //uint32
-				fmt.Printf("Diagnostics[%d].Range.Start.Character = %v\n", i, d.Range.Start.Character) //uint32
-				fmt.Printf("Diagnostics[%d].Message = %s\n", i, d.Message)                             //1
-			}
-			if len(dd) == 0 {
-				fmt.Println("Diagnostics was []")
-			}
-			fmt.Printf("\n\n-----------------------------------------------\n\n")
-		*/
 	}
 }
 
-func readMessages(reader *bufio.Reader, diagnostics chan []protocol.Diagnostic) {
+func readMessages(bufOut *bufio.Reader, diagnostics chan []protocol.Diagnostic) {
 	// note if more than one jsonrpc message is read at one time; only dealing with first
-	bb := make([]byte, 10000)
-	z := make([]byte, 10000)
 	//reader := bufio.NewReaderSize(*stdoutp, 10000)
+	var length int64
 	for {
-		//z = z[:0]
-		n, err := reader.Read(z)
+		line, err := bufOut.ReadString('\n')
 		if err == io.EOF {
 			fmt.Printf("\n\nGot EOF presumably from shutdown\n\n")
 			break
 		}
 		if err != nil {
-			log.Fatalf("\nRead -> %s\n%v", string(z), err)
+			log.Fatalf("\nRead -> %s\n%v", string(line), err)
 		}
 
-		fmt.Printf("\n\n-------------------------------\n\n")
-		fmt.Printf("ReadMessages: Number of bytes read = %d\n", n)
-		fmt.Printf("ReadMessages: Full Read = %s", string(z[:n]))
+		if line == "" {
+			continue
+		}
 
+		colon := strings.IndexRune(line, ':')
+		if colon < 0 {
+			continue
+		}
+
+		//name, value := line[:colon], strings.TrimSpace(line[colon+1:])
+		value := strings.TrimSpace(line[colon+1:])
+
+		if length, err = strconv.ParseInt(value, 10, 32); err != nil {
+			continue
+		}
+
+		if length <= 0 {
+			continue
+		}
+
+		// to read the last two chars of '\r\n\r\n'
+		line, err = bufOut.ReadString('\n')
+		if err != nil {
+			log.Fatalf("\nRead -> %s\n%v", string(line), err)
+		}
+
+		//data := make([]byte, length+2)
+		data := make([]byte, length)
+
+		if _, err = io.ReadFull(bufOut, data); err != nil {
+			continue
+		}
+
+		//fmt.Printf("data = \n%s\n", string(data))
 		var v JsonNotification
-		var length int
-		var idx int
-		var idx0 int
-		if string(z[:7]) == "Content" {
-			idx0 = bytes.Index(z, []byte(":")) + 2
-			idx = bytes.Index(z, []byte("\r\n\r\n"))
-			length, _ = strconv.Atoi(string(z[idx0:idx]))
-			if (idx + 4 + length) == n {
-				err = json.Unmarshal(z[idx+4:n], &v)
-				if err != nil {
-					log.Fatalf("\nA -> %s\n%v", string(z), err)
-				}
-				bb = bb[0:]
-			} else if (idx + 4 + length) > n {
-				//bb = z[:n]
-				copy(bb, z[:n])
-				bb = bb[:n]
-				fmt.Printf("\n### len(b) = %d", len(bb))
-				fmt.Printf("\n###CONTINUATION!!! bb = %s\n", string(bb))
-				continue
-			} else if (idx + 4 + length) < n {
-				//bb = z[idx+4+length : n]
-				copy(bb, z[idx+4+length:n])
-				fmt.Printf("\n### len(b) = %d", len(bb))
-				fmt.Printf("\n###CONTINUATION!!! bb = %s\n", string(bb))
-				err = json.Unmarshal(z[idx+4:idx+4+length], &v)
-				if err != nil {
-					log.Fatalf("\nB -> %s\n%v", string(z), err)
-				}
-			}
-		} else {
-			z = append(bb, z...)
-			fmt.Printf("\n!!!CONTINUATION!!! bb = %s\n", string(bb))
-			fmt.Printf("!!!CONTINUATION!!! z = %s\n", string(z[:n+len(bb)]))
-			idx0 = bytes.Index(z, []byte(":")) + 2
-			idx = bytes.Index(z, []byte("\r\n\r\n"))
-			length, _ = strconv.Atoi(string(z[idx0:idx]))
-			if (idx + 4 + length) == (n + len(bb)) {
-				err = json.Unmarshal(z[idx+4:n+len(bb)], &v)
-				if err != nil {
-					log.Fatalf("\nC -> %s\n%v", string(z), err)
-				}
-				bb = bb[0:]
-			} else if (idx + 4 + length) > (n + len(bb)) {
-				copy(bb, z[:n+len(bb)])
-				bb = bb[:n+len(bb)]
-				continue
-			} else if (idx + 4 + length) < (n + len(bb)) {
-				fmt.Printf("idx + 4 + length = %d; n + len(bb) = %d", idx+4+length, len(bb))
-				err = json.Unmarshal(z[idx+4:idx+4+length], &v)
-				if err != nil {
-					log.Fatalf("\nD -> %s\n%v", string(z), err)
-				}
-				copy(bb, z[idx+4+length:n+len(bb)])
-				bb = bb[:n+len(bb)-(idx+4+length)]
-			}
+		//err = json.Unmarshal(data[2:], &v)
+		err = json.Unmarshal(data, &v)
+		if err != nil {
+			log.Fatalf("\nB -> %s\n%v", string(data[2:]), err)
 		}
 
 		if v.Method == "textDocument/publishDiagnostics" {
@@ -442,12 +421,9 @@ func readMessages(reader *bufio.Reader, diagnostics chan []protocol.Diagnostic) 
 				Params  protocol.PublishDiagnosticsParams `json:"params"`
 			}
 			var vv JsonPubDiag
-			err = json.Unmarshal(z[idx+4:idx+4+length], &vv)
+			//err = json.Unmarshal(data[2:], &vv)
+			err = json.Unmarshal(data, &vv)
 
-			fmt.Printf("\n\n+++++++++++++++++++++++++++++++++++++++++++++++\n\n")
-			fmt.Printf("params = %+v\n", vv.Params)
-			fmt.Printf("uri = %+v\n", vv.Params.URI) //file:///home/slzatz/go_fragments/main.go
-			fmt.Printf("\n\n+++++++++++++++++++++++++++++++++++++++++++++++\n\n")
 			diagnostics <- vv.Params.Diagnostics
 		}
 
